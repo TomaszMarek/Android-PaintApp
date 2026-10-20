@@ -1,52 +1,73 @@
 package com.example.nazwaprojektu4;
 
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
-public class FragmentDetails extends Fragment {
-    private Image image;
+import java.util.List;
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if(getArguments() != null){
-            image = getArguments().getParcelable("image");
+public class FragmentListAdapter extends RecyclerView.Adapter<FragmentListAdapter.ImagesViewHolder> {
+    private List<Image> mListPictures;
+    private final LayoutInflater mInflater;
+    private final OnImageClickListener imageClickListener;
+
+    public interface OnImageClickListener {
+        void onItemClick(Image image);
+    }
+
+    public static class ImagesViewHolder extends RecyclerView.ViewHolder {
+        TextView mIdPhoto;
+        TextView mNamePhoto;
+
+        public ImagesViewHolder(@NonNull View itemView) {
+            super(itemView);
+            mIdPhoto = itemView.findViewById(R.id.imageId);
+            mNamePhoto = itemView.findViewById(R.id.imageName);
+        }
+
+        public void bind(final Image image, final OnImageClickListener listener) {
+            mIdPhoto.setText(String.valueOf(image.id));
+            mNamePhoto.setText(image.name);
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onItemClick(image);
+                }
+            });
         }
     }
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_picture, container, false);
-        return view;
-    }
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        if (image != null) {
-            setImage(image);
-        }
-    }
-    public static FragmentDetails setInstance(Image image){
-        //przekazywanie danych do fragmentu
-        FragmentDetails fragmentDetails = new FragmentDetails();
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("image", image);
-        fragmentDetails.setArguments(bundle);
-        return fragmentDetails;
 
+    public FragmentListAdapter(List<Image> listPictures, OnImageClickListener imageClickListener, Context context) {
+        this.mListPictures = listPictures;
+        this.imageClickListener = imageClickListener;
+        this.mInflater = LayoutInflater.from(context);
     }
-    public void setImage(Image image) {
-        Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, Long.toString(image.id));
-        ImageView imageView = getView().findViewById(R.id.imageView);
-        imageView.setImageURI(imageUri);
+
+    @NonNull
+    @Override
+    public ImagesViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = mInflater.inflate(R.layout.imagedate, parent, false);
+        return new ImagesViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ImagesViewHolder holder, int position) {
+        holder.bind(mListPictures.get(position), imageClickListener);
+    }
+
+    @Override
+    public int getItemCount() {
+        return mListPictures != null ? mListPictures.size() : 0;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void setmListPictures(List<Image> imageList) {
+        this.mListPictures = imageList;
+        notifyDataSetChanged();
     }
 }
